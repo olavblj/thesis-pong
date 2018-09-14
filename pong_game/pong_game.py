@@ -4,12 +4,16 @@ import time
 
 from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
-from config import init_ball_vel, timer_delay, paddle_shape, ball_shape, ball_radius, mid_text_size, score_text_size, \
+from config import init_ball_vel, timer_delay, paddle_shape, ball_shape, ball_radius, mid_text_size, \
+    score_text_size, \
     scene_margin, Key
-from models.ball import Ball
-from models.paddle import Paddle
-from models.scene_and_view import SceneAndView
-from models.text_box import TextBox
+from pong_game.ball import Ball
+from pong_game.paddle import Paddle
+from pong_game.scene_and_view import SceneAndView
+from pong_game.text_box import TextBox
+from system_manager import SystemManager
+
+sys_manager = SystemManager.get_instance()
 
 
 class State(enum.Enum):
@@ -112,12 +116,7 @@ class PongGame(QObject):
         self.paddles["right"].move()
 
     def loop_game_over(self):
-        self.text_boxes["mid"].set_text("GAME OVER")
-        if "game_over_help" not in self.text_boxes:
-            self.text_boxes["game_over_help"] = TextBox(self.boundary[0] / 2, self.boundary[1] * 1.1,
-                                                        size=mid_text_size * 0.5)
-            self.scene_view.scene.addItem(self.text_boxes["game_over_help"])
-            self.text_boxes["game_over_help"].set_text("Press Space to play again. Esc to go to the menu.")
+        pass
 
     # <--- KEY EVENTS --->
 
@@ -148,6 +147,7 @@ class PongGame(QObject):
     # <--- ACTION METHODS --->
 
     def start(self):
+        sys_manager.start_recording()
         self.state = State.countdown
         self.countdown_time = time.time()
         self.reset()
@@ -158,6 +158,14 @@ class PongGame(QObject):
     def game_over(self):
         self.countdown_time = time.time()
         self.state = State.game_over
+
+        self.text_boxes["mid"].set_text("GAME OVER")
+        self.text_boxes["game_over_help"] = TextBox(self.boundary[0] / 2, self.boundary[1] * 1.1,
+                                                    size=mid_text_size * 0.5)
+        self.scene_view.scene.addItem(self.text_boxes["game_over_help"])
+        self.text_boxes["game_over_help"].set_text("Press Space to play again. Esc to go to the menu.")
+
+        sys_manager.stop_recording()
 
     def reset(self):
         self.remove_text_box("game_over_help")
@@ -201,9 +209,6 @@ class PongGame(QObject):
             return None
 
     def remove_text_box(self, key):
-        print("remove {}".format(key))
         if key in self.text_boxes:
             self.scene_view.scene.removeItem(self.text_boxes[key])
             del self.text_boxes[key]
-        else:
-            print("Key not in textboxes")

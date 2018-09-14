@@ -1,5 +1,9 @@
 from config import Key
-from models.pong_game import PongGame, State
+from pong_game.pong_game import PongGame, State
+
+from system_manager import SystemManager
+
+sys_manager = SystemManager.get_instance()
 
 
 class SoloMode(PongGame):
@@ -67,11 +71,15 @@ class SoloMode(PongGame):
             ball_dir = self.ball.direction()
 
             if key == Key.solo_up:
+                sys_manager.current_action = "arm/{}".format(ball_dir)
+
                 if self.action_count > 0:
                     self.game_over()
 
                 self.paddles[ball_dir].start_up()
             elif key == Key.solo_down:
+                sys_manager.current_action = "foot/{}".format(ball_dir)
+
                 if self.action_count > 0:
                     self.game_over()
 
@@ -87,6 +95,7 @@ class SoloMode(PongGame):
         key = event.key()
         if self.state == State.playing:
             if key in [Key.solo_up, Key.solo_down]:
+                sys_manager.current_action = None
                 self.action_count += 1
                 self.paddles["left"].stop()
                 self.paddles["right"].stop()

@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QGraphicsTextItem
 class TextBox(QGraphicsTextItem):
     def __init__(self, x, y, size=None, color=None, **kwargs):
         super().__init__()
-        print("Creating textbox")
         self.x = x
         self.y = y
         self.w = self.boundingRect().width()

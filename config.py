@@ -1,4 +1,9 @@
+import os
+
 from PyQt5.QtCore import Qt
+
+# <=============== PONG GAME CONFIG ===============>
+
 
 # <--- SIZES --->
 
@@ -56,3 +61,25 @@ class PaddleColor:
     moving = Qt.green
     done_moving = Qt.gray
     inactive = Qt.white
+
+
+# <=============== RECORDING CONFIG ===============>
+
+
+dev_mode = True
+batch_size = 500
+ch_names = ["C3", "C4", "P3", "P4"]
+
+
+class URL:
+    _base = "http://127.0.0.1:8000" if dev_mode else ""
+
+    timeframes = "/".join([_base, "time-frames"])
+    sessions = "/".join([_base, "sessions"])
+    persons = "/".join([_base, "persons"])
+
+
+class Path:
+    _project_root = os.path.dirname(os.path.realpath(__file__))
+
+    recording_buffer = "{}/data/recording_buffer".format(_project_root)

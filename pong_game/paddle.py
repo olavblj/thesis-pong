@@ -37,7 +37,6 @@ class Paddle(QGraphicsRectItem):
                 self.setY(y + self.vel)
 
     def reset(self):
-        print("reset paddle")
         self.setY((self.max - self.min) / 2)
         self.vel = 0
 

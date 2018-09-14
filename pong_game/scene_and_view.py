@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsScene
 
-from models.gameview import GameView
+from pong_game.gameview import GameView
 
 
 class SceneAndView:
