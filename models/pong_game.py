@@ -2,68 +2,65 @@ import enum
 import random
 import time
 
-from PyQt5.QtCore import QTimer, pyqtSignal
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QGraphicsTextItem
+from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
-from config import init_ball_vel, timer_delay, paddle_shape, mid_text_size
+from config import init_ball_vel, timer_delay, paddle_shape, ball_shape, ball_radius, mid_text_size, score_text_size, \
+    scene_margin, Key
 from models.ball import Ball
 from models.paddle import Paddle
 from models.scene_and_view import SceneAndView
+from models.text_box import TextBox
 
 
 class State(enum.Enum):
-    countdown = 0
-    playing = 1
-    game_over = 2
+    inactive = 0
+    countdown = 1
+    playing = 2
+    game_over = 3
 
 
-class PongGame:
+class PongGame(QObject):
     finished_signal = pyqtSignal()
+    init_score = [0, 0]
 
     def __init__(self, parent=None):
+        super().__init__(parent)
         self.scene_view = SceneAndView()
 
-        self.state = State.countdown
+        scene_w = self.scene_view.view.sceneRect().width()
+        scene_h = self.scene_view.view.sceneRect().height()
+
+        self.boundary = [scene_w, scene_h]
+
+        self.state = State.inactive
         self.countdown_time = None
+        self.score = self.init_score
 
+        # Create ball and paddles
         self.ball = Ball()
-        self.ball.setRect((self.scene_view.view.size().width() - 15) / 2, self.scene_view.view.height(),
-                          self.ball.radius,
-                          self.ball.radius)
+        self.ball.setRect((scene_w - ball_radius) / 2, scene_h - ball_radius / 2, *ball_shape)
 
-        self.boundary = [self.scene_view.view.width(), self.scene_view.view.height()]
-        print(self.boundary)
+        self.paddles = dict()
+        self.paddles["left"] = Paddle(scene_h, 0)
+        self.paddles["right"] = Paddle(scene_h, scene_w - paddle_shape[0] - scene_margin)
 
-        self.paddle_left = Paddle(self.scene_view.view.height())
-        self.paddle_left.setRect(0, self.scene_view.view.size().height() / 2, *paddle_shape)
+        # Lines
+        self.scene_view.scene.addLine(scene_w / 2, scene_h / 2, scene_w / 2, scene_h * 2)
+        self.scene_view.scene.addLine(0, scene_h, scene_w, scene_h)
 
-        self.paddle_right = Paddle(self.scene_view.view.height())
-        self.paddle_right.setRect(self.scene_view.view.size().width() - paddle_shape[0] * 1.5,
-                                  self.scene_view.view.size().height() / 2,
-                                  *paddle_shape)
-        self.score = [0, 0]
-        self.scene_view.scene.addLine(self.boundary[0] / 2, self.boundary[1] / 2, self.boundary[0] / 2,
-                                      self.boundary[1] * 2)
-
-        self.score_text = QGraphicsTextItem()
-        self.scene_view.scene.addItem(self.score_text)
-        self.update_score()
-        self.score_text.setPos(self.boundary[0] / 2 - self.score_text.boundingRect().width() * .85,
-                               self.boundary[1] / 2)
-
-        self.mid_text = QGraphicsTextItem()
-        self.scene_view.scene.addItem(self.mid_text)
-        mid_text_font = QFont()
-        mid_text_font.setPointSize(mid_text_size)
-        self.mid_text.setFont(mid_text_font)
-        self.mid_text.setPos(self.boundary[0] / 2 - self.mid_text.boundingRect().width() / 2,
-                             self.boundary[1])
-
-        # ball and paddles are added to the scene
+        # Ball and paddles are added to the scene
         self.scene_view.scene.addItem(self.ball)
-        self.scene_view.scene.addItem(self.paddle_left)
-        self.scene_view.scene.addItem(self.paddle_right)
+        self.scene_view.scene.addItem(self.paddles["left"])
+        self.scene_view.scene.addItem(self.paddles["right"])
+
+        # Text boxes
+
+        self.text_boxes = dict()
+        self.text_boxes["score"] = TextBox(scene_w / 2, scene_h * 0.6, size=score_text_size)
+        self.scene_view.scene.addItem(self.text_boxes["score"])
+
+        self.text_boxes["mid"] = TextBox(scene_w / 2, scene_h, size=mid_text_size)
+        self.scene_view.scene.addItem(self.text_boxes["mid"])
 
         self.setup_connections()
 
@@ -73,13 +70,8 @@ class PongGame:
     # <--- SETUP --->
 
     def setup_connections(self):
-        self.scene_view.view.left_up_press.connect(self.paddle_left.start_up)
-        self.scene_view.view.left_down_press.connect(self.paddle_left.start_down)
-        self.scene_view.view.left_key_release.connect(self.paddle_left.stop)
-
-        self.scene_view.view.right_up_press.connect(self.paddle_right.start_up)
-        self.scene_view.view.right_down_press.connect(self.paddle_right.start_down)
-        self.scene_view.view.right_key_release.connect(self.paddle_right.stop)
+        self.scene_view.view.key_press.connect(self.handle_key_press)
+        self.scene_view.view.key_release.connect(self.handle_key_release)
 
     # <--- GAME FLOW --->
 
@@ -92,16 +84,13 @@ class PongGame:
             self.loop_game_over()
 
     def loop_countdown(self):
-        if self.countdown_time is None:
-            self.countdown_time = time.time()
-            mid_text_str = str(3 - int(time.time() - self.countdown_time))
-        elif time.time() - self.countdown_time < 3:
+        if time.time() - self.countdown_time < 3:
             mid_text_str = str(3 - int(time.time() - self.countdown_time))
         else:
             self.state = State.playing
             mid_text_str = ""
 
-        self.mid_text.setPlainText(mid_text_str)
+        self.text_boxes["mid"].set_text(mid_text_str)
 
     def loop_playing(self):
         if self.ball_hits_boundary():
@@ -119,18 +108,48 @@ class PongGame:
         else:
             self.ball.move()
 
-        self.paddle_left.move()
-        self.paddle_right.move()
+        self.paddles["left"].move()
+        self.paddles["right"].move()
 
     def loop_game_over(self):
-        self.mid_text.setPlainText("GAME OVER: {}".format(self.score))
+        self.text_boxes["mid"].set_text("GAME OVER")
+        if "game_over_help" not in self.text_boxes:
+            self.text_boxes["game_over_help"] = TextBox(self.boundary[0] / 2, self.boundary[1] * 1.1,
+                                                        size=mid_text_size * 0.5)
+            self.scene_view.scene.addItem(self.text_boxes["game_over_help"])
+            self.text_boxes["game_over_help"].set_text("Press Space to play again. Esc to go to the menu.")
 
-        if time.time() - self.countdown_time > 5:
-            self.finished_signal.emit()
+    # <--- KEY EVENTS --->
+
+    def handle_key_press(self, event):
+        key = event.key()
+        if self.state == State.playing:
+            if key == Key.left_up:
+                self.paddles["left"].start_up()
+            elif key == Key.left_down:
+                self.paddles["left"].start_down()
+            elif key == Key.right_up:
+                self.paddles["right"].start_up()
+            elif key == Key.right_down:
+                self.paddles["right"].start_down()
+        elif self.state == State.game_over:
+            if key == Key.replay:
+                self.start()
+            elif key == Key.exit:
+                self.finished_signal.emit()
+
+    def handle_key_release(self, event):
+        key = event.key()
+        if key in [Key.left_up, Key.left_down]:
+            self.paddles["left"].stop()
+        elif key in [Key.right_up, Key.right_down]:
+            self.paddles["right"].stop()
 
     # <--- ACTION METHODS --->
 
     def start(self):
+        self.state = State.countdown
+        self.countdown_time = time.time()
         self.reset()
 
     def stop(self):
@@ -141,14 +160,20 @@ class PongGame:
         self.state = State.game_over
 
     def reset(self):
-        self.score = [0, 0]
+        self.remove_text_box("game_over_help")
+
+        self.paddles["right"].reset()
+        self.paddles["left"].reset()
+
+        self.score = self.init_score
+        self.update_score()
         self.serve(random.choice([0, 1]))
 
     # <--- HELPER METHODS --->
 
     def update_score(self):
         message = str(self.score[0]) + '    ' + str(self.score[1])
-        self.score_text.setPlainText(message)
+        self.text_boxes["score"].set_text(message)
 
     def serve(self, left_side):
         self.ball.setPos(0, 0)
@@ -158,7 +183,9 @@ class PongGame:
 
     def ball_hits_paddle(self):
         z = self.scene_view.scene.collidingItems(self.ball)
-        if self.ball.collidesWithItem(self.paddle_left) or self.ball.collidesWithItem(self.paddle_right):
+        if self.ball.collidesWithItem(self.paddles["left"]):
+            return True
+        elif self.ball.collidesWithItem(self.paddles["right"]):
             return True
 
     def ball_hits_boundary(self):
@@ -172,3 +199,11 @@ class PongGame:
             return 'right'
         else:
             return None
+
+    def remove_text_box(self, key):
+        print("remove {}".format(key))
+        if key in self.text_boxes:
+            self.scene_view.scene.removeItem(self.text_boxes[key])
+            del self.text_boxes[key]
+        else:
+            print("Key not in textboxes")

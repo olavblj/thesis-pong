@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush
 from PyQt5.QtWidgets import QGraphicsEllipseItem
 
-from config import ball_vel_inc, ball_radius
+from config import ball_vel_inc
 
 
 class Ball(QGraphicsEllipseItem):
@@ -10,7 +10,6 @@ class Ball(QGraphicsEllipseItem):
         super(Ball, self).__init__(parent)
         self.vel_x = 0
         self.vel_y = 0
-        self.radius = ball_radius
 
         self.setBrush(QBrush(Qt.gray))
 

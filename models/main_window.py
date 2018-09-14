@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QStackedWidget, QFormLayout, QLineEdit, QPushButton, QMainWindow
 
 from config import window_size
-from models.pong_game import PongGame
 from models.solo_mode import SoloMode
 
 
@@ -15,22 +14,23 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget(self)
         self.setCentralWidget(self.stack)
 
-        self.home_view = None
-        self.game_view = None
+        self.home_view = QWidget()
+        self.pong_game = SoloMode()
+        self.pong_game.finished_signal.connect(self.finish_game)
 
-        self.show_home_view()
+        self.setup_home_view()
 
         self.stack.addWidget(self.home_view)
+        self.stack.addWidget(self.pong_game.scene_view.view)
 
-    def show_home_view(self):
+        self.stack.setCurrentWidget(self.home_view)
+
+    def setup_home_view(self):
         res = QWidget()
         layout = QFormLayout()
         layout.addRow("Name", QLineEdit())
-        layout.addRow("Address", QLineEdit())
-
-        button = QPushButton("Play 2-Player")
-        button.clicked.connect(self.play_2_player)
-        layout.addRow(button)
+        layout.addRow("Age", QLineEdit())
+        layout.addRow("Gender", QLineEdit())
 
         button = QPushButton("Play Solo")
         button.clicked.connect(self.play_solo)
@@ -39,21 +39,12 @@ class MainWindow(QMainWindow):
         res.setLayout(layout)
         res.setFixedSize(*window_size)
         self.home_view = res
-        self.stack.setCurrentWidget(self.home_view)
 
     def finish_game(self):
-        self.stack.removeWidget(self.game_view.scene_view.view)
-        self.show_home_view()
-
-    def play_2_player(self):
-        self.game_view = PongGame()
-        self.stack.addWidget(self.game_view.scene_view.view)
-        self.stack.setCurrentWidget(self.game_view.scene_view.view)
-        self.game_view.finished_signal.connect()
-        self.game_view.start()
+        self.pong_game.stop()
+        self.stack.setCurrentWidget(self.home_view)
+        # self.stack.removeWidget(self.pong_game.scene_view.view)
 
     def play_solo(self):
-        self.game_view = SoloMode()
-        self.stack.addWidget(self.game_view.scene_view.view)
-        self.stack.setCurrentWidget(self.game_view.scene_view.view)
-        self.game_view.start()
+        self.stack.setCurrentWidget(self.pong_game.scene_view.view)
+        self.pong_game.start()
