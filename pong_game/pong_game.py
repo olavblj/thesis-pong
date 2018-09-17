@@ -39,6 +39,7 @@ class PongGame(QObject):
         self.state = State.inactive
         self.countdown_time = None
         self.score = self.init_score
+        self.last_hit_paddle = None
 
         # Create ball and paddles
         self.ball = Ball()
@@ -194,9 +195,15 @@ class PongGame(QObject):
     def ball_hits_paddle(self):
         z = self.scene_view.scene.collidingItems(self.ball)
         if self.ball.collidesWithItem(self.paddles["left"]):
-            return True
+            if self.last_hit_paddle == "right" or self.last_hit_paddle is None:
+                self.last_hit_paddle = "left"
+                return True
         elif self.ball.collidesWithItem(self.paddles["right"]):
-            return True
+            if self.last_hit_paddle == "left" or self.last_hit_paddle is None:
+                self.last_hit_paddle = "right"
+                return True
+
+        return False
 
     def ball_hits_boundary(self):
         if self.ball.y() < -self.boundary[1] / 2 + 15 or self.ball.y() > self.boundary[1] / 2 - 15:
@@ -219,5 +226,5 @@ class PongGame(QObject):
         file_path = Path.high_score_list
 
         with open(file_path, "a") as outfile:
-            line = '{}; {}\n'.format(sys_manager.person.name, self.score)
+            line = '\n{}; {}'.format(sys_manager.person.name, self.score)
             outfile.write(line)

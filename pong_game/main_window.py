@@ -22,6 +22,8 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget(self)
         self.setCentralWidget(self.stack)
 
+        self.highscore_list = QListWidget()
+
         self.pong_game = SoloMode()
         self.pong_game.finished_signal.connect(self.finish_game)
 
@@ -67,11 +69,9 @@ class MainWindow(QMainWindow):
 
         box_layout.addWidget(form, stretch=2)
 
-        high_score_list = QListWidget()
+        self.highscore_list.addItems(fetch_highscore())
 
-        high_score_list.addItems(fetch_highscore())
-
-        box_layout.addWidget(high_score_list, stretch=1)
+        box_layout.addWidget(self.highscore_list, stretch=1)
 
         res.setLayout(box_layout)
         res.setFixedSize(*window_size)
@@ -80,6 +80,7 @@ class MainWindow(QMainWindow):
     def finish_game(self):
         self.pong_game.stop()
         self.stack.setCurrentWidget(self.home_view)
+        self.update_highscore_list()
 
     def play_solo(self):
         name = self.comps["name"].text()
@@ -93,7 +94,7 @@ class MainWindow(QMainWindow):
             age = "24"
 
         sys_manager.person = Person.create_or_fetch(name, age, gender)
-        sys_manager.is_real_data = self.comps["is_real"].checkState()
+        sys_manager.is_real_data = bool(self.comps["is_real"].checkState())
 
         self.stack.setCurrentWidget(self.pong_view)
         self.pong_game.start()
@@ -104,3 +105,7 @@ class MainWindow(QMainWindow):
             self.comps["status"].setStyleSheet('background-color: green')
         else:
             self.comps["status"].setStyleSheet('background-color: red')
+
+    def update_highscore_list(self):
+        self.highscore_list.clear()
+        self.highscore_list.addItems(fetch_highscore())

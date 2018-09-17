@@ -24,7 +24,6 @@ def date_str(timestamp):
 
 def fetch_highscore():
     file_path = Path.high_score_list
-    line_count = sum(1 for _ in open(file_path))
 
     names = []
     scores = []
@@ -32,12 +31,10 @@ def fetch_highscore():
         for i, line in enumerate(infile):
             tokens = [t.strip() for t in line.split(";")]
             name, score = tokens
-            print(name, score)
             names.append(name)
-            scores.append(score)
+            scores.append(int(score))
 
     order = np.flip(np.argsort(scores))
-    print(order)
     scores = np.array(scores)[order]
     names = np.array(names)[order]
 

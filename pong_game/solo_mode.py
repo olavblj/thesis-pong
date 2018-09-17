@@ -66,13 +66,14 @@ class SoloMode(PongGame):
 
             if key == Key.solo_up:
                 sys_manager.current_action = "arm/{}".format(ball_dir)
-
+                print(sys_manager.current_action)
                 if self.action_count > 0:
                     self.game_over()
 
                 self.paddles[ball_dir.value].start_up()
             elif key == Key.solo_down:
                 sys_manager.current_action = "foot/{}".format(ball_dir)
+                print(sys_manager.current_action)
 
                 if self.action_count > 0:
                     self.game_over()
