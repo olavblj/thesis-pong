@@ -31,6 +31,7 @@ class SystemManager:
 
         # -- STATUS FLAGS --
         self.receiving_samples = False
+        self.is_real_data = False
 
     # <--- RECORDING CONTROL --->
 

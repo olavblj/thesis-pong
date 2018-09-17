@@ -1,8 +1,24 @@
+import enum
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush
 from PyQt5.QtWidgets import QGraphicsEllipseItem
 
 from config import ball_vel_inc
+
+
+class Direction(enum.Enum):
+    left = "left"
+    right = "right"
+
+    def __str__(self):
+        return self.value
+
+    def opposite(self):
+        if self == self.left:
+            return Direction.right
+        else:
+            return Direction.left
 
 
 class Ball(QGraphicsEllipseItem):
@@ -28,4 +44,4 @@ class Ball(QGraphicsEllipseItem):
         self.setY(self.y() + self.vel_y)
 
     def direction(self):
-        return "left" if self.vel_x < 0 else "right"
+        return Direction.left if self.vel_x < 0 else Direction.right

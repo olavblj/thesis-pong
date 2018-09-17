@@ -18,11 +18,17 @@ class Session:
     def create(cls):
         url = URL.sessions
 
-        r = requests.post(url, data=dict(person=sys_manager.person.id, ch_names=ch_names))
+        payload = dict(
+            person=sys_manager.person.id,
+            ch_names=ch_names,
+            is_real_data=sys_manager.is_real_data
+        )
+
+        r = requests.post(url, data=payload)
         json_resp = r.json()
 
         obj = cls(**json_resp)
-        
+
         if r.status_code == 201:
             Print.api("Created New Session ({})".format(obj.id))
         else:

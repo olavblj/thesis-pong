@@ -1,9 +1,11 @@
-from PyQt5.QtWidgets import QWidget, QStackedWidget, QFormLayout, QLineEdit, QPushButton, QMainWindow, QComboBox, QLabel
+from PyQt5.QtWidgets import QWidget, QStackedWidget, QFormLayout, QLineEdit, QPushButton, QMainWindow, QComboBox, \
+    QLabel, QCheckBox, QBoxLayout, QListWidget
 
 from config import window_size
 from models.person import Person
 from pong_game.solo_mode import SoloMode
 from system_manager import SystemManager
+from utils.utils import fetch_highscore
 
 sys_manager = SystemManager.get_instance()
 
@@ -33,36 +35,51 @@ class MainWindow(QMainWindow):
 
         self.stack.setCurrentWidget(self.home_view)
 
+    # noinspection PyArgumentList
     def setup_home_view(self):
         res = QWidget()
-        layout = QFormLayout()
+        box_layout = QBoxLayout(QBoxLayout.Direction.LeftToRight)
+        form = QWidget()
+        form_layout = QFormLayout()
 
         self.comps["status"] = QLabel()
         self.comps["status"].setText("False")
-        layout.addRow("Recieving", self.comps["status"])
+        self.comps["status"].setStyleSheet('background-color: red')
+        form_layout.addRow("Receiving", self.comps["status"])
 
         self.comps["name"] = QLineEdit()
-        layout.addRow("Full Name", self.comps["name"])
+        form_layout.addRow("Full Name", self.comps["name"])
 
         self.comps["age"] = QLineEdit()
-        layout.addRow("Age", self.comps["age"])
+        form_layout.addRow("Age", self.comps["age"])
 
         self.comps["gender"] = QComboBox()
         self.comps["gender"].addItems(["male", "female", "other"])
-        layout.addRow("Gender", self.comps["gender"])
+        form_layout.addRow("Gender", self.comps["gender"])
+
+        self.comps["is_real"] = QCheckBox()
+        form_layout.addRow("Real data", self.comps["is_real"])
 
         button = QPushButton("Play Solo")
         button.clicked.connect(self.play_solo)
-        layout.addRow(button)
+        form_layout.addRow("", button)
+        form.setLayout(form_layout)
 
-        res.setLayout(layout)
+        box_layout.addWidget(form, stretch=2)
+
+        high_score_list = QListWidget()
+
+        high_score_list.addItems(fetch_highscore())
+
+        box_layout.addWidget(high_score_list, stretch=1)
+
+        res.setLayout(box_layout)
         res.setFixedSize(*window_size)
         self.home_view = res
 
     def finish_game(self):
         self.pong_game.stop()
         self.stack.setCurrentWidget(self.home_view)
-        # self.stack.removeWidget(self.pong_game.scene_view.view)
 
     def play_solo(self):
         name = self.comps["name"].text()
@@ -76,9 +93,14 @@ class MainWindow(QMainWindow):
             age = "24"
 
         sys_manager.person = Person.create_or_fetch(name, age, gender)
+        sys_manager.is_real_data = self.comps["is_real"].checkState()
 
         self.stack.setCurrentWidget(self.pong_view)
         self.pong_game.start()
 
     def update_status_indicator(self, receiving_samples):
         self.comps["status"].setText(str(receiving_samples))
+        if receiving_samples:
+            self.comps["status"].setStyleSheet('background-color: green')
+        else:
+            self.comps["status"].setStyleSheet('background-color: red')

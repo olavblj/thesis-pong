@@ -1,14 +1,33 @@
+import enum
+
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush
 from PyQt5.QtWidgets import QGraphicsRectItem
 
-from config import paddle_vel, PaddleColor, paddle_shape
+from config import paddle_vel, paddle_shape
+
+
+class State(enum.Enum):
+    inactive = 0
+    moving = 1
+    done_moving = 2
+
+    def color(self):
+        if self == self.inactive:
+            return Qt.white
+        elif self == self.moving:
+            return Qt.green
+        elif self == self.done_moving:
+            return Qt.gray
 
 
 class Paddle(QGraphicsRectItem):
+    state = State.inactive
+
     def __init__(self, scene_h, x, parent=None):
         super(Paddle, self).__init__(parent)
         self.vel = 0
-        self.set_color("gray")
+        self.set_state(State.inactive)
 
         self.min = 0
         self.max = scene_h - paddle_shape[1]
@@ -40,10 +59,11 @@ class Paddle(QGraphicsRectItem):
         self.setY((self.max - self.min) / 2)
         self.vel = 0
 
-    def set_color(self, color):
-        if color == "moving":
-            self.setBrush(QBrush(PaddleColor.moving))
-        elif color == "done_moving":
-            self.setBrush(QBrush(PaddleColor.done_moving))
-        elif color == "inactive":
-            self.setBrush(QBrush(PaddleColor.inactive))
+    def update_color(self):
+        self.setBrush(QBrush(self.state.color()))
+
+    def set_state(self, state):
+        self.state = state
+
+        self.update_color()
+

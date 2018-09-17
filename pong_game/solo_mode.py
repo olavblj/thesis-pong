@@ -1,6 +1,6 @@
 from config import Key
+from pong_game.paddle import State as PState
 from pong_game.pong_game import PongGame, State
-
 from system_manager import SystemManager
 
 sys_manager = SystemManager.get_instance()
@@ -21,26 +21,20 @@ class SoloMode(PongGame):
     # <--- GAME FLOW --->
 
     def loop_playing(self):
+        ball_dir = self.ball.direction()
         if self.action_count == 0:
-            if self.ball.direction() == "left":
-                self.paddles["left"].set_color("moving")
-                self.paddles["right"].set_color("inactive")
-            elif self.ball.direction() == "right":
-                self.paddles["left"].set_color("inactive")
-                self.paddles["right"].set_color("moving")
+            self.paddles[ball_dir.value].set_state(PState.moving)
+            self.paddles[ball_dir.opposite().value].set_state(PState.inactive)
         else:
-            if self.ball.direction() == "left":
-                self.paddles["left"].set_color("done_moving")
-                self.paddles["right"].set_color("inactive")
-            elif self.ball.direction() == "right":
-                self.paddles["left"].set_color("inactive")
-                self.paddles["right"].set_color("done_moving")
+            self.paddles[ball_dir.value].set_state(PState.done_moving)
+            self.paddles[ball_dir.opposite().value].set_state(PState.inactive)
 
         if self.ball_hits_boundary():
             self.ball.reflect_y()
         elif self.ball_hits_paddle():
             self.ball.reflect_x()
-            self.score += 1000
+            if self.paddles[ball_dir.value].state == PState.done_moving:
+                self.score += 1000
             self.action_count = 0
             self.update_score()
         elif self.ball_missed() is not None:
@@ -56,8 +50,8 @@ class SoloMode(PongGame):
     def reset(self):
         super(SoloMode, self).reset()
         self.action_count = 0
-        self.paddles["right"].set_color("inactive")
-        self.paddles["left"].set_color("inactive")
+        self.paddles["right"].set_state(PState.inactive)
+        self.paddles["left"].set_state(PState.inactive)
 
     # <--- HELPER METHODS --->
 
@@ -76,14 +70,14 @@ class SoloMode(PongGame):
                 if self.action_count > 0:
                     self.game_over()
 
-                self.paddles[ball_dir].start_up()
+                self.paddles[ball_dir.value].start_up()
             elif key == Key.solo_down:
                 sys_manager.current_action = "foot/{}".format(ball_dir)
 
                 if self.action_count > 0:
                     self.game_over()
 
-                self.paddles[ball_dir].start_down()
+                self.paddles[ball_dir.value].start_down()
 
         elif self.state == State.game_over:
             if key == Key.replay:

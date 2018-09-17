@@ -43,8 +43,8 @@ class Key:
     right_up = Qt.Key_Up
     right_down = Qt.Key_Down
 
-    solo_up = right_up
-    solo_down = right_down
+    solo_up = Qt.Key_Space
+    solo_down = Qt.Key_B
 
     replay = Qt.Key_Space
     exit = Qt.Key_Escape
@@ -55,13 +55,6 @@ class Key:
 # Timer refresh rate
 timer_rate = 30
 timer_delay = int(1000 // timer_rate)
-
-
-class PaddleColor:
-    moving = Qt.green
-    done_moving = Qt.gray
-    inactive = Qt.white
-
 
 # <=============== RECORDING CONFIG ===============>
 
@@ -83,3 +76,4 @@ class Path:
     _project_root = os.path.dirname(os.path.realpath(__file__))
 
     recording_buffer = "{}/data/recording_buffer".format(_project_root)
+    high_score_list = "{}/data/high_score_list".format(_project_root)

@@ -6,7 +6,7 @@ from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
 from config import init_ball_vel, timer_delay, paddle_shape, ball_shape, ball_radius, mid_text_size, \
     score_text_size, \
-    scene_margin, Key
+    scene_margin, Key, Path
 from pong_game.ball import Ball
 from pong_game.paddle import Paddle
 from pong_game.scene_and_view import SceneAndView
@@ -159,6 +159,8 @@ class PongGame(QObject):
         self.countdown_time = time.time()
         self.state = State.game_over
 
+        self.write_high_score()
+
         self.text_boxes["mid"].set_text("GAME OVER")
         self.text_boxes["game_over_help"] = TextBox(self.boundary[0] / 2, self.boundary[1] * 1.1,
                                                     size=mid_text_size * 0.5)
@@ -212,3 +214,10 @@ class PongGame(QObject):
         if key in self.text_boxes:
             self.scene_view.scene.removeItem(self.text_boxes[key])
             del self.text_boxes[key]
+
+    def write_high_score(self):
+        file_path = Path.high_score_list
+
+        with open(file_path, "a") as outfile:
+            line = '{}; {}\n'.format(sys_manager.person.name, self.score)
+            outfile.write(line)
