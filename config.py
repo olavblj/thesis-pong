@@ -76,4 +76,4 @@ class Path:
     _project_root = os.path.dirname(os.path.realpath(__file__))
 
     recording_buffer = "{}/data/recording_buffer".format(_project_root)
-    high_score_list = "{}/data/high_score_list".format(_project_root)
+    high_score_list = "{}/data/highscore_list".format(_project_root)
