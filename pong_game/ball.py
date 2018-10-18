@@ -1,5 +1,6 @@
 import enum
 
+import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush
 from PyQt5.QtWidgets import QGraphicsEllipseItem
@@ -29,7 +30,11 @@ class Ball(QGraphicsEllipseItem):
 
         self.setBrush(QBrush(Qt.gray))
 
-    def reflect_x(self):
+    def reflect_x(self, paddle_y, paddle_h):
+        y = self.y()
+        degree = (2 * (y - paddle_y)) / paddle_h
+        self.vel_y += 3 * np.tanh(degree)
+
         self.vel_x = -self.vel_x
         self.vel_x += ball_vel_inc * (-1 if self.vel_x < 0 else 1)
 

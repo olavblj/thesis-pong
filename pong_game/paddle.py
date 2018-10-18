@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush
 from PyQt5.QtWidgets import QGraphicsRectItem
 
-from config import paddle_vel, paddle_shape
+from config import paddle_vel, paddle_shape, paddle_height_reduction, paddle_min_height
 
 
 class State(enum.Enum):
@@ -22,19 +22,17 @@ class State(enum.Enum):
 
 
 class Paddle(QGraphicsRectItem):
-    state = State.inactive
 
     def __init__(self, scene_h, x, parent=None):
         super(Paddle, self).__init__(parent)
+        self.min = None
+        self.max = None
+        self.state = None
         self.vel = 0
-        self.set_state(State.inactive)
+        self.x = x
+        self.scene_h = scene_h
 
-        self.min = 0
-        self.max = scene_h - paddle_shape[1]
-
-        w, h = paddle_shape
-
-        self.setRect(x, scene_h / 2, w, h)
+        self.reset()
 
     def start_up(self):
         self.vel = -paddle_vel
@@ -56,14 +54,31 @@ class Paddle(QGraphicsRectItem):
                 self.setY(y + self.vel)
 
     def reset(self):
-        self.setY((self.max - self.min) / 2)
         self.vel = 0
+        w, h = paddle_shape
+        y = self.scene_h - h / 2
+
+        self.update_rect(self.x, y, w, h)
+        self.set_state(State.inactive)
+        self.setY(0)
 
     def update_color(self):
         self.setBrush(QBrush(self.state.color()))
 
     def set_state(self, state):
         self.state = state
-
         self.update_color()
 
+    def reduce_height(self):
+        rect = self.rect()
+        x, y, w, h = rect.x(), rect.y(), rect.width(), rect.height()
+
+        red = paddle_height_reduction if h - paddle_height_reduction > paddle_min_height else 0
+
+        self.update_rect(x, y + red / 2, w, h - red)
+
+    def update_rect(self, x, y, w, h):
+        self.max = (self.scene_h - h) / 2
+        self.min = -self.max
+
+        self.setRect(x, y, w, h)

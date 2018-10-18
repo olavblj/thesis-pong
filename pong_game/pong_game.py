@@ -93,6 +93,7 @@ class PongGame(QObject):
             mid_text_str = str(3 - int(time.time() - self.countdown_time))
         else:
             self.state = State.playing
+            sys_manager.start_recording()
             mid_text_str = ""
 
         self.text_boxes["mid"].set_text(mid_text_str)
@@ -148,7 +149,6 @@ class PongGame(QObject):
     # <--- ACTION METHODS --->
 
     def start(self):
-        sys_manager.start_recording()
         self.state = State.countdown
         self.countdown_time = time.time()
         self.reset()
@@ -176,6 +176,7 @@ class PongGame(QObject):
         self.paddles["right"].reset()
         self.paddles["left"].reset()
 
+        self.last_hit_paddle = None
         self.score = self.init_score
         self.update_score()
         self.serve(random.choice([0, 1]))
@@ -194,13 +195,16 @@ class PongGame(QObject):
 
     def ball_hits_paddle(self):
         z = self.scene_view.scene.collidingItems(self.ball)
+
         if self.ball.collidesWithItem(self.paddles["left"]):
             if self.last_hit_paddle == "right" or self.last_hit_paddle is None:
                 self.last_hit_paddle = "left"
+
                 return True
         elif self.ball.collidesWithItem(self.paddles["right"]):
             if self.last_hit_paddle == "left" or self.last_hit_paddle is None:
                 self.last_hit_paddle = "right"
+
                 return True
 
         return False

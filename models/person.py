@@ -19,7 +19,9 @@ class Person:
         url = URL.persons
 
         r = requests.post(url, data=dict(name=name, age=age, gender=gender))
+        print(r)
         json_resp = r.json()
+        Print.json(json_resp)
 
         person = cls(**json_resp)
 

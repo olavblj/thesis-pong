@@ -6,10 +6,10 @@ from pylsl import StreamInlet, resolve_stream
 
 from config import ch_names
 from models.session import Session
+from models.time_frame import TimeFrame
 from system_manager import SystemManager
 from utils.prints import Print, print_init, print_section
 from utils.uploader import Uploader
-from utils.utils import write_time_frame
 
 sys_manager = SystemManager.get_instance()
 
@@ -54,7 +54,7 @@ class StreamHandler(threading.Thread):
         if self.state == State.RECORDING:
             sensor_data = data[0:len(ch_names)]
             label = sys_manager.current_action
-            write_time_frame(sensor_data, label, timestamp)
+            TimeFrame.write_to_buffer(sensor_data, label, timestamp)
 
     @print_section
     def start_recording(self):

@@ -14,7 +14,8 @@ base_size = 1.5
 init_ball_vel = 3 * base_size
 
 # Increase in ball velocity when it hits a paddle
-ball_vel_inc = 0.2 * base_size
+# ball_vel_inc = 0.2 * base_size
+ball_vel_inc = 0
 
 # Radius of ball
 ball_radius = 16 * base_size
@@ -24,7 +25,11 @@ ball_shape = (ball_radius, ball_radius)
 window_size = (700 * base_size, 400 * base_size)
 
 # Paddle shape
-paddle_shape = (10 * base_size, 70 * base_size)
+paddle_shape = (10 * base_size, 100 * base_size)
+
+# Reduction in paddle height when it hits the ball
+paddle_min_height = 10 * base_size
+paddle_height_reduction = (paddle_shape[1] - paddle_min_height) / 7
 
 # Paddle velocity
 paddle_vel = 8 * base_size

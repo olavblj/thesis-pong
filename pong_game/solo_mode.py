@@ -32,9 +32,14 @@ class SoloMode(PongGame):
         if self.ball_hits_boundary():
             self.ball.reflect_y()
         elif self.ball_hits_paddle():
-            self.ball.reflect_x()
-            if self.paddles[ball_dir.value].state == PState.done_moving:
+            paddle = self.paddles[ball_dir.value]
+
+            self.ball.reflect_x(paddle.y(), paddle.rect().height())
+
+            if paddle.state == PState.done_moving:
                 self.score += 1000
+                paddle.reduce_height()
+
             self.action_count = 0
             self.update_score()
         elif self.ball_missed() is not None:
@@ -50,8 +55,9 @@ class SoloMode(PongGame):
     def reset(self):
         super(SoloMode, self).reset()
         self.action_count = 0
-        self.paddles["right"].set_state(PState.inactive)
-        self.paddles["left"].set_state(PState.inactive)
+
+        self.paddles["right"].reset()
+        self.paddles["left"].reset()
 
     # <--- HELPER METHODS --->
 
