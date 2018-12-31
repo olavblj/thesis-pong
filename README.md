@@ -28,4 +28,4 @@ If you want to upload the recorded data to the EEG API, you will need to make su
 
 ## Foot Pedal
 
-The author has used [this foot pedal](https://www.amazon.com/dp/B0098PLPOI?ref_=pe_1196280_123950170) with this system. This pedal outputs the character ´b´ when it is pressed. If a foot pedal is used that outputs a different character, the `Key.solo_down` variable has to be updated in the ´config.py´ file.
+The author has used [this foot pedal](https://www.amazon.com/dp/B0098PLPOI?ref_=pe_1196280_123950170) with this system. This pedal outputs the character `b` when it is pressed. If a foot pedal is used that outputs a different character, the `Key.solo_down` variable has to be updated in the `config.py` file.
